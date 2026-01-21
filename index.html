@@ -1,0 +1,431 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ESB Logo Download Portal</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  <style>
+    :root{--accent:#0182AB;--accent2:#20BBAC;--bg:#f6f8fa;--card:#ffffff;--muted:#6b7280}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;color:#111;background:var(--bg)}
+    header{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;padding:18px 24px;display:flex;align-items:center;gap:16px}
+    header h1{margin:0;font-size:18px}
+    .container{display:flex;height:calc(100vh - 64px)}
+    nav{width:260px;border-right:1px solid rgba(0,0,0,0.06);background:linear-gradient(180deg,#fff, #fbfeff);padding:16px;overflow:auto}
+    main{flex:1;padding:18px;overflow:auto}
+    .search{display:flex;gap:8px;margin-bottom:12px}
+    .search input{flex:1;padding:10px;border-radius:8px;border:1px solid #e5e7eb}
+    .folder{padding:8px;border-radius:8px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+    .folder:hover{background:#f1f5f9}
+    .folder.active{background:rgba(1,130,171,0.08);border-left:3px solid var(--accent)}
+    .logo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,0.03);display:flex;flex-direction:column;gap:10px}
+    .thumb{height:120px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#f8fafc;border:1px dashed #e6eef3}
+    .thumb img{max-width:100%;max-height:100%}
+    .formats{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{padding:8px 10px;border-radius:8px;border:1px solid #e6eef3;background:#fff;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#fff;border:0}
+    .meta{font-size:13px;color:var(--muted)}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .controls{display:flex;gap:8px}
+    footer{padding:12px;text-align:center;color:var(--muted);font-size:13px}
+    @media (max-width:820px){nav{display:none}.container{flex-direction:column}header{justify-content:center}}
+  </style>
+</head>
+<body>
+  <header>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="6" fill="white"/><path d="M6 8h12M6 12h12M6 16h12" stroke="#0182AB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>ESB Logo Download Portal</h1>
+  </header>
+  <div class="container">
+    <nav id="sidebar">
+      <div class="search">
+        <input id="searchInput" placeholder="Search logos or ids..." />
+        <button id="refreshBtn" class="btn">Refresh</button>
+      </div>
+      <div id="foldersList"></div>
+      <hr style="margin:12px 0;border:0;height:1px;background:#eef3f6" />
+      <div class="meta">Folders auto-generated from dataset. Click a folder to open.</div>
+    </nav>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <strong id="selectedFolderLabel">All logos</strong>
+          <div class="meta" id="countLabel">0 logos</div>
+        </div>
+        <div class="controls">
+          <select id="sortBy" class="btn">
+            <option value="name">Sort by name</option>
+            <option value="id">Sort by id</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="grid" class="logo-grid"></div>
+
+      <footer>
+     this website is created by Rasty Xalil &copy; 2025 MultiMedia Creater at ESB Group | for any inquiries, please contact me at +9647705538017
+      </footer>
+    </main>
+  </div>
+
+  <!-- JSZip and FileSaver (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-M6p5a6s7S8bSgXy3oYxqz0Z8q1uzmZrnx1G0zJvJ7q3qYfQp3q5jD1QxkX4wH1Kq6w3e6m8z7Y8iZx2x1M3G1A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" integrity="sha512-5xQw8K6QZ1Z2v5G6JmQ9s3XQeI3aV1G6Y9r5b1t8d1c3r5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    // --------- Replace this sample dataset with your real JSON ---------
+
+    // ------------------------------------------------------------------
+const logosData = [
+  { id: 'logo-032', name: 'Asset 32', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 32@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 32.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 32.svg' }
+  ]},
+  { id: 'logo-033', name: 'Asset 33', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 33@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 33.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 33.svg' }
+  ]},
+  { id: 'logo-034', name: 'Asset 34', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 34@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 34.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 34.svg' }
+  ]},
+  { id: 'logo-035', name: 'Asset 35', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 35@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 35.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 35.svg' }
+  ]},
+  { id: 'logo-036', name: 'Asset 36', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 36@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 36.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 36.svg' }
+  ]},
+  { id: 'logo-037', name: 'Asset 37', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 37@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 37.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 37.svg' }
+  ]},
+  { id: 'logo-038', name: 'Asset 38', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 38@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 38.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 38.svg' }
+  ]},
+  { id: 'logo-039', name: 'Asset 39', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 39@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 39.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 39.svg' }
+  ]},
+  { id: 'logo-040', name: 'Asset 40', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 40@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 40.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 40.svg' }
+  ]},
+  { id: 'logo-041', name: 'Asset 41', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 41@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 41.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 41.svg' }
+  ]},
+  { id: 'logo-043', name: 'Asset 43', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 43@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 43.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 43.svg' }
+  ]},
+  { id: 'logo-044', name: 'Asset 44', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 44@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 44.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 44.svg' }
+  ]},
+  { id: 'logo-045', name: 'Asset 45', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 45@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 45.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 45.svg' }
+  ]},
+  { id: 'logo-046', name: 'Asset 46', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 46@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 46.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 46.svg' }
+  ]},
+  { id: 'logo-047', name: 'Asset 47', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 47@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 47.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 47.svg' }
+  ]},
+  { id: 'logo-048', name: 'Asset 48', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 48@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 48.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 48.svg' }
+  ]},
+  { id: 'logo-049', name: 'Asset 49', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 49@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 49.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 49.svg' }
+  ]},
+  { id: 'logo-050', name: 'Asset 50', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 50@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 50.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 50.svg' }
+  ]},
+  { id: 'logo-051', name: 'Asset 51', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 51@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 51.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 51.svg' }
+  ]},
+  { id: 'logo-052', name: 'Asset 52', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 52@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 52.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 52.svg' }
+  ]},
+  { id: 'logo-053', name: 'Asset 53', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 53@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 53.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 53.svg' }
+  ]},
+  { id: 'logo-054', name: 'Asset 54', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 54@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 54.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 54.svg' }
+  ]},
+  { id: 'logo-055', name: 'Asset 55', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 55@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 55.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 55.svg' }
+  ]},
+  { id: 'logo-056', name: 'Asset 56', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 56@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 56.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 56.svg' }
+  ]},
+  { id: 'logo-057', name: 'Asset 57', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 57@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 57.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 57.svg' }
+  ]},
+  { id: 'logo-058', name: 'Asset 58', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 58@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 58.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 58.svg' }
+  ]},
+  { id: 'logo-059', name: 'Asset 59', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 59@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 59.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 59.svg' }
+  ]},
+  { id: 'logo-060', name: 'Asset 60', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 60@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 60.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 60.svg' }
+  ]},
+  { id: 'logo-061', name: 'Asset 61', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 61@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 61.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 61.svg' }
+  ]},
+  { id: 'logo-062', name: 'Asset 62', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 62@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 62.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 62.svg' }
+  ]},
+  { id: 'logo-063', name: 'Asset 63', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 63@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 63.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 63.svg' }
+  ]},
+  { id: 'logo-064', name: 'Asset 64', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 64@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 64.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 64.svg' }
+  ]},
+  { id: 'logo-065', name: 'Asset 65', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 65@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 65.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 65.svg' }
+  ]},
+  { id: 'logo-066', name: 'Asset 66', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 66@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 66.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 66.svg' }
+  ]},
+  { id: 'logo-067', name: 'Asset 67', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 67@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 67.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 67.svg' }
+  ]},
+  { id: 'logo-068', name: 'Asset 68', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 68@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 68.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 68.svg' }
+  ]},
+  { id: 'logo-069', name: 'Asset 69', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 69@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 69.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 69.svg' }
+  ]},
+  { id: 'logo-070', name: 'Asset 70', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 70@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 70.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 70.svg' }
+  ]},
+  { id: 'logo-071', name: 'Asset 71', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 71@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 71.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 71.svg' }
+  ]},
+  { id: 'logo-072', name: 'Asset 72', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 72@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 72.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 72.svg' }
+  ]},
+  { id: 'logo-073', name: 'Asset 73', folder: 'logos', formats: [
+    { ext: 'png', url: 'logos/4x/Asset 73@4x.png' },
+    { ext: 'pdf', url: 'logos/PDF/Asset 73.pdf' },
+    { ext: 'svg', url: 'logos/SVG/Asset 73.svg' }
+  ]}
+];
+
+
+    const folders = {}; // folderName -> [logo...]
+    logosData.forEach(l => { folders[l.folder] = folders[l.folder] || []; folders[l.folder].push(l); });
+
+    const foldersList = document.getElementById('foldersList');
+    const grid = document.getElementById('grid');
+    const selectedFolderLabel = document.getElementById('selectedFolderLabel');
+    const countLabel = document.getElementById('countLabel');
+    const searchInput = document.getElementById('searchInput');
+    const sortBy = document.getElementById('sortBy');
+
+    let activeFolder = null; // null = all
+    let visibleLogos = [];
+
+    function renderFolders() {
+      foldersList.innerHTML = '';
+      const allBtn = document.createElement('div');
+      allBtn.className = 'folder' + (activeFolder === null ? ' active' : '');
+      allBtn.innerHTML = `<div>All (${logosData.length})</div>`;
+      allBtn.onclick = () => { activeFolder = null; render(); };
+      foldersList.appendChild(allBtn);
+
+      Object.keys(folders).sort().forEach(name => {
+        const el = document.createElement('div');
+        el.className = 'folder' + (activeFolder === name ? ' active' : '');
+        el.innerHTML = `<div>${name} (${folders[name].length})</div>`;
+        el.onclick = () => { activeFolder = name; render(); };
+        foldersList.appendChild(el);
+      });
+    }
+
+    function renderGrid(list) {
+      grid.innerHTML = '';
+      if (!list.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;color:var(--muted)">No logos found.</div>';
+        return;
+      }
+      list.forEach(logo => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const thumb = document.createElement('div');
+        thumb.className = 'thumb';
+        // find a raster preview (png) or svg; otherwise placeholder
+        const preview = logo.formats.find(f => /png|jpg|jpeg|svg/.test(f.ext));
+        if (preview) {
+          const img = document.createElement('img');
+          img.src = preview.url;
+          img.alt = logo.name;
+          img.onerror = () => { img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="120"><rect width="100%" height="100%" fill="%23eef3f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23808f99" font-size="14">Preview not found</text></svg>'; };
+          thumb.appendChild(img);
+        } else {
+          thumb.innerHTML = '<div style="text-align:center;color:var(--muted)"><strong>No preview</strong><div style="font-size:12px">Formats only</div></div>';
+        }
+
+        const title = document.createElement('div');
+        title.innerHTML = `<div><strong>${logo.name}</strong></div><div class="meta">id: ${logo.id} &middot; folder: ${logo.folder}</div>`;
+
+        const formats = document.createElement('div');
+        formats.className = 'formats';
+        logo.formats.forEach(fmt => {
+          const a = document.createElement('a');
+          a.className = 'btn';
+          a.textContent = fmt.ext.toUpperCase();
+          a.href = fmt.url;
+          a.download = `${logo.name.replace(/\s+/g,'_')}.${fmt.ext}`;
+          a.target = '_blank';
+          formats.appendChild(a);
+        });
+
+        card.appendChild(thumb);
+        card.appendChild(title);
+        card.appendChild(formats);
+        grid.appendChild(card);
+      });
+    }
+
+    function filterAndSort() {
+      const q = searchInput.value.trim().toLowerCase();
+      let list = (activeFolder ? folders[activeFolder] || [] : logosData).slice();
+      if (q) {
+        list = list.filter(l => l.id.toLowerCase().includes(q) || l.name.toLowerCase().includes(q) || (l.folder && l.folder.toLowerCase().includes(q)));
+      }
+      if (sortBy.value === 'name') list.sort((a,b)=>a.name.localeCompare(b.name)); else list.sort((a,b)=>a.id.localeCompare(b.id));
+      visibleLogos = list;
+      return list;
+    }
+
+    async function zipAndDownload(logo) {
+      const zip = new JSZip();
+      const folder = zip.folder(logo.id);
+      const fetchPromises = logo.formats.map(async fmt => {
+        try {
+          const res = await fetch(fmt.url);
+          if (!res.ok) throw new Error('Not found');
+          const blob = await res.blob();
+          folder.file(`${logo.name.replace(/\s+/g,'_')}.${fmt.ext}`, blob);
+        } catch (e) {
+          // skip missing files
+          console.warn('Could not fetch', fmt.url, e.message);
+        }
+      });
+      await Promise.all(fetchPromises);
+      const content = await zip.generateAsync({type:'blob'});
+      saveAs(content, `${logo.id}_${logo.name.replace(/\s+/g,'_')}_all_formats.zip`);
+    }
+
+    async function zipVisibleAndDownload() {
+      if (!visibleLogos.length) return alert('No logos visible to download.');
+      const zip = new JSZip();
+      const tasks = [];
+      visibleLogos.forEach(logo => {
+        const folder = zip.folder(logo.id);
+        logo.formats.forEach(fmt => {
+          const t = fetch(fmt.url).then(res => { if(!res.ok) throw new Error('not ok'); return res.blob() }).then(blob => folder.file(`${logo.name.replace(/\s+/g,'_')}.${fmt.ext}`, blob)).catch(e=>console.warn('skip',fmt.url));
+          tasks.push(t);
+        });
+      });
+      await Promise.all(tasks);
+      const content = await zip.generateAsync({type:'blob'});
+      saveAs(content, `esb_logos_visible_${new Date().toISOString().slice(0,10)}.zip`);
+    }
+
+    function render() {
+      renderFolders();
+      const list = filterAndSort();
+      renderGrid(list);
+      selectedFolderLabel.textContent = activeFolder ? `Folder: ${activeFolder}` : 'All logos';
+      countLabel.textContent = `${list.length} logos`;
+    }
+
+    document.getElementById('refreshBtn').onclick = () => render();
+    searchInput.oninput = () => render();
+    sortBy.onchange = () => render();
+
+    // initial render
+    render();
+  </script>
+</body>
+</html>
